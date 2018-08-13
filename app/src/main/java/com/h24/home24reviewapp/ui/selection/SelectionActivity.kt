@@ -1,5 +1,8 @@
 package com.h24.home24reviewapp.ui.selection
 
+import android.animation.AnimatorSet
+import android.animation.ObjectAnimator
+import android.animation.PropertyValuesHolder
 import android.arch.lifecycle.Observer
 import android.arch.lifecycle.ViewModelProviders
 import android.content.Intent
@@ -23,6 +26,7 @@ import kotlinx.android.synthetic.main.activity_selection.*
 class SelectionActivity : AppCompatActivity(), View.OnClickListener {
 
     private lateinit var viewModel: SelectionViewModel
+    private val animationSet = AnimatorSet()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -45,6 +49,8 @@ class SelectionActivity : AppCompatActivity(), View.OnClickListener {
         btn_unlike.setOnClickListener(this)
         btn_retry.setOnClickListener(this)
 
+        setupProgressAnimation()
+
         viewModel.onActivityCreated()
     }
 
@@ -52,9 +58,15 @@ class SelectionActivity : AppCompatActivity(), View.OnClickListener {
      * Registering observers for related liveData from viewModel
      */
     private fun registerViewModelObservers() {
-        viewModel.loadingVisibility.observe(this, Observer { visibility ->
+        viewModel.loadingStatus.observe(this, Observer { visibility ->
             visibility?.let {
-                progress_bar.visibility = it
+                if (it) {
+                    progress_bar.visibility = View.VISIBLE
+                    animationSet.start()
+                } else {
+                    animationSet.cancel()
+                    progress_bar.visibility = View.GONE
+                }
             }
         })
 
@@ -175,7 +187,7 @@ class SelectionActivity : AppCompatActivity(), View.OnClickListener {
         performExit()
     }
 
-    fun performExit() {
+    private fun performExit() {
         fab_container.visibility = View.VISIBLE
         animateRevealHide(activity_root, R.color.bg_color, fab_container.width / 2,
                 object : OnRevealAnimationListener {
@@ -188,6 +200,24 @@ class SelectionActivity : AppCompatActivity(), View.OnClickListener {
                         ActivityCompat.finishAfterTransition(this@SelectionActivity);
                     }
                 })
+    }
+
+    private fun setupProgressAnimation() {
+        val alpha = ObjectAnimator.ofPropertyValuesHolder(
+                progress_bar, PropertyValuesHolder.ofFloat("alpha", 1f, 0f))
+        alpha.duration = 1000
+        val scaleX = ObjectAnimator.ofPropertyValuesHolder(
+                progress_bar, PropertyValuesHolder.ofFloat("scaleX", 0f, 1f))
+        val scaleY = ObjectAnimator.ofPropertyValuesHolder(
+                progress_bar, PropertyValuesHolder.ofFloat("scaleY", 0f, 1f))
+        scaleX.duration = 1000
+        scaleY.duration = 1000
+        alpha.repeatCount = ObjectAnimator.INFINITE
+        scaleX.repeatCount = ObjectAnimator.INFINITE
+        scaleY.repeatCount = ObjectAnimator.INFINITE
+
+
+        animationSet.playTogether(alpha, scaleX, scaleY)
     }
 
 }

@@ -26,7 +26,7 @@ class SelectionViewModel : BaseViewModel() {
 
     private lateinit var subscription: Disposable
 
-    val loadingVisibility: MutableLiveData<Int> = MutableLiveData()
+    val loadingStatus: MutableLiveData<Boolean> = MutableLiveData()
     val errorVisibility: MutableLiveData<Int> = MutableLiveData()
     val endVisibility: MutableLiveData<Int> = MutableLiveData()
     val buttonState: MutableLiveData<Boolean> = MutableLiveData()
@@ -63,11 +63,15 @@ class SelectionViewModel : BaseViewModel() {
      */
     private fun loadArticles(from: Int) {
         if (from >= data.size) {
+            if (loadingStatus.value == true) {
+                //Call already made to repository
+                return
+            }
             buttonState.value = false
             subscription = repo.status.subscribe { status ->
                 when (status) {
                     is ResponseStatus.Progress -> {
-                        loadingVisibility.value = if (status.loading) View.VISIBLE else View.GONE
+                        loadingStatus.value = status.loading
                     }
                     is ResponseStatus.Success -> {
                         buttonState.value = true
