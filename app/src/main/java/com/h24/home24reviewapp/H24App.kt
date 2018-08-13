@@ -5,6 +5,7 @@ import com.facebook.drawee.backends.pipeline.Fresco
 import com.h24.home24reviewapp.di.AppModule
 import com.h24.home24reviewapp.di.CoreComponent
 import com.h24.home24reviewapp.di.DaggerCoreComponent
+import io.reactivex.plugins.RxJavaPlugins
 
 class H24App: Application() {
 
@@ -16,6 +17,10 @@ class H24App: Application() {
         super.onCreate()
         initDI()
         Fresco.initialize(this)
+        RxJavaPlugins.setErrorHandler { error ->
+            //Unexpected RXJAVA errors should be handled here to prevent crashes
+            error.printStackTrace()
+        }
     }
 
     private fun initDI() {

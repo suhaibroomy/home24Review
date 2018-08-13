@@ -1,5 +1,6 @@
 package com.h24.home24reviewapp.ui.review
 
+import android.support.v7.content.res.AppCompatResources
 import android.support.v7.widget.RecyclerView
 import android.view.LayoutInflater
 import android.view.View
@@ -76,6 +77,8 @@ class ReviewViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
     private val tvPrice = itemView.findViewById<TextView?>(R.id.tv_price)
     private val ivMainImage = itemView.findViewById<SimpleDraweeView>(R.id.iv_main)
     private val ivLiked = itemView.findViewById<ImageView>(R.id.iv_liked)
+    private val icLikeDrawable = AppCompatResources.getDrawable(itemView.context, R.drawable.ic_like)
+    private val icUnlikeDrawable = AppCompatResources.getDrawable(itemView.context, R.drawable.ic_unlike)
 
     fun onBind(model: ArticleModel) {
         tvTitle?.text = model.title
@@ -89,7 +92,7 @@ class ReviewViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
                 .build()
         ivMainImage.controller = controller
 
-        ivLiked.setImageResource(if (model.isLiked) R.drawable.ic_like else R.drawable.ic_unlike)
+        ivLiked.setImageDrawable(if (model.isLiked) icLikeDrawable else icUnlikeDrawable)
     }
 
 }

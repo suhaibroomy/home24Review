@@ -16,10 +16,10 @@ fun <T> PublishSubject<ResponseStatus<T>>.failed(e: Throwable) {
 /**
  * Extension function to push  a success event with data to the observing responseStatus
  * */
-fun <T> PublishSubject<ResponseStatus<T>>.success(t: T) {
+fun <T> PublishSubject<ResponseStatus<T>>.success(t: T, endPosition: Int) {
     with(this){
         loading(false)
-        onNext(ResponseStatus.success(t))
+        onNext(ResponseStatus.success(t, endPosition))
     }
 }
 

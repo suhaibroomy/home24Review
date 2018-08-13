@@ -2,15 +2,14 @@ package com.h24.home24reviewapp.ui.selection
 
 import android.arch.lifecycle.MutableLiveData
 import android.view.View
-import com.h24.home24reviewapp.model.ResponseStatus
 import com.h24.home24reviewapp.model.ArticleModel
+import com.h24.home24reviewapp.model.ResponseStatus
 import com.h24.home24reviewapp.model.UpdateCardEvent
 import com.h24.home24reviewapp.repo.Repository
 import com.h24.home24reviewapp.util.ARTICLES_PAGINATION_LIMIT
 import com.h24.home24reviewapp.util.MAX_CARDS
 import com.h24.home24reviewapp.util.MAX_OF_ARTICLES_TO_LOAD
 import com.h24.home24reviewapp.viewmodel.BaseViewModel
-import io.reactivex.disposables.Disposable
 import javax.inject.Inject
 
 /**
@@ -23,8 +22,6 @@ class SelectionViewModel : BaseViewModel() {
      */
     @Inject
     lateinit var repo: Repository
-
-    private lateinit var subscription: Disposable
 
     val loadingStatus: MutableLiveData<Boolean> = MutableLiveData()
     val errorVisibility: MutableLiveData<Int> = MutableLiveData()
@@ -39,6 +36,27 @@ class SelectionViewModel : BaseViewModel() {
     private var reviewedIndex = 0
 
     private var animate = true
+
+    init {
+        compositeDisposable.add(repo.status.subscribe { status ->
+            when (status) {
+                is ResponseStatus.Progress -> {
+                    loadingStatus.value = status.loading
+                }
+                is ResponseStatus.Success -> {
+                    if (status.endPosition > data.size) {
+                        buttonState.value = true
+                        //Not calculating diff as this is a sample. Ideally should calculate diff and add
+                        data.addAll(status.data)
+                        notifyCardsLoaded()
+                    }
+                }
+                is ResponseStatus.Failure -> {
+                    errorVisibility.value = View.VISIBLE
+                }
+            }
+        })
+    }
 
     /**
      * check for starting animation.
@@ -68,25 +86,6 @@ class SelectionViewModel : BaseViewModel() {
                 return
             }
             buttonState.value = false
-            subscription = repo.status.subscribe { status ->
-                when (status) {
-                    is ResponseStatus.Progress -> {
-                        loadingStatus.value = status.loading
-                    }
-                    is ResponseStatus.Success -> {
-                        buttonState.value = true
-
-                        data.addAll(status.data)
-
-                        notifyCardsLoaded()
-                        subscription.dispose()
-                    }
-                    is ResponseStatus.Failure -> {
-                        errorVisibility.value = View.VISIBLE
-                        subscription.dispose()
-                    }
-                }
-            }
 
             if (from + ARTICLES_PAGINATION_LIMIT < MAX_OF_ARTICLES_TO_LOAD) {
                 repo.loadArticles(from, ARTICLES_PAGINATION_LIMIT)
@@ -159,11 +158,6 @@ class SelectionViewModel : BaseViewModel() {
         }
     }
 
-    override fun onCleared() {
-        super.onCleared()
-        subscription.dispose()
-    }
-
     /**
      * Tries to load articles from repo again and notifies the UI to update state
      */
@@ -176,7 +170,7 @@ class SelectionViewModel : BaseViewModel() {
      * Checks if all the articles are reviews and notifies the View to naviagate to next screen
      */
     fun onNavigationRequested() {
-        navigate.value = reviewedIndex == data.size
+        navigate.value = reviewedIndex == MAX_OF_ARTICLES_TO_LOAD
     }
 }
 

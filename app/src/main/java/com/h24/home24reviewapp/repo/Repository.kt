@@ -26,7 +26,7 @@ class Repository(private val home24Service: Home24Service) {
      */
     fun loadArticles(offset: Int, limit: Int) {
         if (offset + limit <= dataList.size) {
-            status.success(dataList.subList(offset, offset + limit))
+            status.success(dataList.subList(offset, offset + limit), dataList.size)
         } else {
             val queryMap = HashMap<String, String>()
             queryMap["appDomain"] = "1"
@@ -42,7 +42,7 @@ class Repository(private val home24Service: Home24Service) {
                     .subscribe(
                             { result ->
                                 dataList.addAll(result._embedded.articles)
-                                status.success(dataList.subList(offset, offset + limit))
+                                status.success(dataList.subList(offset, offset + limit), dataList.size)
                             },
                             { error -> status.failed(error) }
                     )
