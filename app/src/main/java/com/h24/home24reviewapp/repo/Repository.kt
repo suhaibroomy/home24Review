@@ -28,13 +28,7 @@ class Repository(private val home24Service: Home24Service) {
         if (offset + limit <= dataList.size) {
             status.success(dataList.subList(offset, offset + limit), dataList.size)
         } else {
-            val queryMap = HashMap<String, String>()
-            queryMap["appDomain"] = "1"
-            queryMap["locale"] = "de_DE"
-            queryMap["offset"] = dataList.size.toString()
-            queryMap["limit"] = limit.toString()
-
-            home24Service.getArticles(queryMap)
+            home24Service.getArticles(dataList.size, limit)
                     .subscribeOn(Schedulers.io())
                     .observeOn(AndroidSchedulers.mainThread())
                     .doOnSubscribe { status.loading(true) }
