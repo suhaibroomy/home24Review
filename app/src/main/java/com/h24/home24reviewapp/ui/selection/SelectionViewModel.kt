@@ -6,8 +6,9 @@ import com.h24.home24reviewapp.model.ResponseStatus
 import com.h24.home24reviewapp.model.ArticleModel
 import com.h24.home24reviewapp.model.UpdateCardEvent
 import com.h24.home24reviewapp.repo.Repository
+import com.h24.home24reviewapp.util.ARTICLES_PAGINATION_LIMIT
 import com.h24.home24reviewapp.util.MAX_CARDS
-import com.h24.home24reviewapp.util.NUM_OF_ARTICLES_TO_LOAD
+import com.h24.home24reviewapp.util.MAX_OF_ARTICLES_TO_LOAD
 import com.h24.home24reviewapp.viewmodel.BaseViewModel
 import io.reactivex.disposables.Disposable
 import javax.inject.Inject
@@ -33,7 +34,7 @@ class SelectionViewModel : BaseViewModel() {
     val statusText: MutableLiveData<String> = MutableLiveData()
     val cardEvent: MutableLiveData<UpdateCardEvent> = MutableLiveData()
 
-    private var data: List<ArticleModel>? = null
+    private val data = mutableListOf<ArticleModel>()
     private var currentIndex = 0
     private var reviewedIndex = 0
 
@@ -52,14 +53,16 @@ class SelectionViewModel : BaseViewModel() {
     }
 
     fun onActivityCreated() {
-        loadArticles()
+        if (reviewedIndex < MAX_OF_ARTICLES_TO_LOAD) {
+            loadArticles(reviewedIndex)
+        }
     }
 
     /**
      * Load Articles from the repository and notifies the listeners
      */
-    private fun loadArticles() {
-        if (data == null) {
+    private fun loadArticles(from: Int) {
+        if (from >= data.size) {
             buttonState.value = false
             subscription = repo.status.subscribe { status ->
                 when (status) {
@@ -69,7 +72,7 @@ class SelectionViewModel : BaseViewModel() {
                     is ResponseStatus.Success -> {
                         buttonState.value = true
 
-                        data = status.data
+                        data.addAll(status.data)
 
                         notifyCardsLoaded()
                         subscription.dispose()
@@ -80,7 +83,12 @@ class SelectionViewModel : BaseViewModel() {
                     }
                 }
             }
-            repo.loadArticles(NUM_OF_ARTICLES_TO_LOAD)
+
+            if (from + ARTICLES_PAGINATION_LIMIT < MAX_OF_ARTICLES_TO_LOAD) {
+                repo.loadArticles(from, ARTICLES_PAGINATION_LIMIT)
+            } else {
+                repo.loadArticles(from, MAX_OF_ARTICLES_TO_LOAD - from)
+            }
         } else {
             notifyCardsLoaded()
         }
@@ -92,14 +100,14 @@ class SelectionViewModel : BaseViewModel() {
     private fun notifyCardsLoaded() {
         val nextCards = mutableListOf<ArticleModel>()
         for (i in reviewedIndex until (reviewedIndex + MAX_CARDS)) {
-            if (i >= data!!.size) {
+            if (i >= data.size) {
                 break
             }
             currentIndex = i
-            nextCards.add(data!![i])
+            nextCards.add(data[i])
         }
         cardEvent.value = UpdateCardEvent.add(nextCards)
-        statusText.value = "$reviewedIndex/${data!!.size} Reviewed"
+        statusText.value = "$reviewedIndex/$MAX_OF_ARTICLES_TO_LOAD Reviewed"
     }
 
 
@@ -122,22 +130,24 @@ class SelectionViewModel : BaseViewModel() {
      * all the required observer for state change
      */
     private fun processEvent(liked: Boolean) {
-        data?.let {
-            if (reviewedIndex < it.size) {
+        if (reviewedIndex < data.size) {
 
-                it[currentIndex].isLiked = liked
-                var nextCard: ArticleModel? = null
-                if (currentIndex < it.size - 1) {
-                    currentIndex++
-                    nextCard = it[currentIndex]
-                }
-
-                reviewedIndex++
-                statusText.value = "$reviewedIndex/${data!!.size} Reviewed"
-                cardEvent.value =  if (liked) UpdateCardEvent.swipeRight(nextCard) else UpdateCardEvent.swipeLeft(nextCard)
+            data[currentIndex].isLiked = liked
+            var nextCard: ArticleModel? = null
+            if (currentIndex < data.size - 1) {
+                currentIndex++
+                nextCard = data[currentIndex]
             }
 
-            if (reviewedIndex == it.size) {
+            reviewedIndex++
+            statusText.value = "$reviewedIndex/$MAX_OF_ARTICLES_TO_LOAD Reviewed"
+            cardEvent.value = if (liked) UpdateCardEvent.swipeRight(nextCard) else UpdateCardEvent.swipeLeft(nextCard)
+        }
+
+        if (reviewedIndex == data.size) {
+            if (reviewedIndex < MAX_OF_ARTICLES_TO_LOAD) {
+                loadArticles(reviewedIndex)
+            } else {
                 endVisibility.value = View.VISIBLE
                 buttonState.value = false
                 statusText.value = ""
@@ -155,14 +165,14 @@ class SelectionViewModel : BaseViewModel() {
      */
     fun retryFetch() {
         errorVisibility.value = View.GONE
-        loadArticles()
+        loadArticles(reviewedIndex)
     }
 
     /**
      * Checks if all the articles are reviews and notifies the View to naviagate to next screen
      */
     fun onNavigationRequested() {
-        navigate.value = reviewedIndex == data?.size
+        navigate.value = reviewedIndex == data.size
     }
 }
 

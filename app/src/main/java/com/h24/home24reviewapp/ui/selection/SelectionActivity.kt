@@ -15,6 +15,7 @@ import com.h24.home24reviewapp.model.UpdateCardEvent
 import com.h24.home24reviewapp.ui.customviews.StackView
 import com.h24.home24reviewapp.ui.review.ReviewActivity
 import com.h24.home24reviewapp.util.OnRevealAnimationListener
+import com.h24.home24reviewapp.util.animateRevealHide
 import com.h24.home24reviewapp.util.animateRevealShow
 import com.h24.home24reviewapp.util.showToast
 import kotlinx.android.synthetic.main.activity_selection.*
@@ -32,7 +33,7 @@ class SelectionActivity : AppCompatActivity(), View.OnClickListener {
         if (viewModel.shouldAnimate()) {
             setupEnterAnimation()
         } else {
-            root_layout.alpha =1f
+            root_layout.alpha = 1f
             root_layout.setBackgroundColor(ContextCompat.getColor(this, R.color.bg_color))
         }
 
@@ -120,7 +121,7 @@ class SelectionActivity : AppCompatActivity(), View.OnClickListener {
     override fun onClick(view: View?) {
         when (view!!.id) {
             R.id.btn_retry -> viewModel.retryFetch()
-            R.id.iv_back -> ActivityCompat.finishAfterTransition(this)
+            R.id.iv_back -> performExit()
             R.id.btn_unlike -> {
                 if (!card_stack_view.animating) {
                     viewModel.onUnliked()
@@ -168,6 +169,25 @@ class SelectionActivity : AppCompatActivity(), View.OnClickListener {
             }
 
         })
+    }
+
+    override fun onBackPressed() {
+        performExit()
+    }
+
+    fun performExit() {
+        fab_container.visibility = View.VISIBLE
+        animateRevealHide(activity_root, R.color.bg_color, fab_container.width / 2,
+                object : OnRevealAnimationListener {
+
+                    override fun onRevealShow() {
+                    }
+
+                    override fun onRevealHide() {
+                        root_layout.alpha = 0f
+                        ActivityCompat.finishAfterTransition(this@SelectionActivity);
+                    }
+                })
     }
 
 }

@@ -3,4 +3,6 @@
     <dimen name="rv_item_offset">4dp</dimen>
 
     <dimen name="card_stack_translation">16dp</dimen>
+
+    <integer name="grid_item_count">2</integer>
 </resources>

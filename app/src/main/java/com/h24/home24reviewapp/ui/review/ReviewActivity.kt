@@ -37,8 +37,9 @@ class ReviewActivity : AppCompatActivity() {
 
         adapter = ReviewAdapter(viewModel.layoutType.value!!)
 
-        recycler_view.layoutManager = GridLayoutManager(this, 2)
-        recycler_view.addItemDecoration(RecyclerViewItemOffset(resources.getDimensionPixelSize(R.dimen.rv_item_offset), 2))
+        val span = resources.getInteger(R.integer.grid_item_count)
+        recycler_view.layoutManager = GridLayoutManager(this, span)
+        recycler_view.addItemDecoration(RecyclerViewItemOffset(resources.getDimensionPixelSize(R.dimen.rv_item_offset), span))
         recycler_view.adapter = adapter
 
         btn_toggle.setOnClickListener {
@@ -70,7 +71,8 @@ class ReviewActivity : AppCompatActivity() {
 
                 when (viewModel.layoutType.value) {
                     ReviewViewModel.LayoutType.GRID -> {
-                        recycler_view.layoutManager = GridLayoutManager(this, 2)
+                        val span = resources.getInteger(R.integer.grid_item_count)
+                        recycler_view.layoutManager = GridLayoutManager(this, span)
                         btn_toggle.setImageResource(R.drawable.ic_list)
 
                     }

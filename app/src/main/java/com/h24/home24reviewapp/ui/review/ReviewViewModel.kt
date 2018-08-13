@@ -4,7 +4,7 @@ import android.arch.lifecycle.MutableLiveData
 import com.h24.home24reviewapp.model.ResponseStatus
 import com.h24.home24reviewapp.model.ArticleModel
 import com.h24.home24reviewapp.repo.Repository
-import com.h24.home24reviewapp.util.NUM_OF_ARTICLES_TO_LOAD
+import com.h24.home24reviewapp.util.MAX_OF_ARTICLES_TO_LOAD
 import com.h24.home24reviewapp.viewmodel.BaseViewModel
 import io.reactivex.disposables.Disposable
 import javax.inject.Inject
@@ -52,7 +52,7 @@ class ReviewViewModel : BaseViewModel() {
             }
         }
 
-        repo.loadArticles(NUM_OF_ARTICLES_TO_LOAD)
+        repo.loadArticles(0, MAX_OF_ARTICLES_TO_LOAD)
     }
 
     override fun onCleared() {

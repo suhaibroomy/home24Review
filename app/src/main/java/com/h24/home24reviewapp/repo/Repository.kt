@@ -18,20 +18,20 @@ import javax.inject.Singleton
 class Repository(private val home24Service: Home24Service) {
 
     val status = PublishSubject.create<ResponseStatus<List<ArticleModel>>>()
-    private var list: List<ArticleModel>? = null
+    private val dataList = mutableListOf<ArticleModel>()
 
     /**
      * Loads articles if not present from the service and publishes the data on a stream
      * @param limit number of articles to be fetched
      */
-    fun loadArticles(limit: Int) {
-        list?.let {
-            status.success(list!!)
-        } ?: run {
+    fun loadArticles(offset: Int, limit: Int) {
+        if (offset + limit <= dataList.size) {
+            status.success(dataList.subList(offset, offset + limit))
+        } else {
             val queryMap = HashMap<String, String>()
             queryMap["appDomain"] = "1"
             queryMap["locale"] = "de_DE"
-            queryMap["offset"] = "0"
+            queryMap["offset"] = dataList.size.toString()
             queryMap["limit"] = limit.toString()
 
             home24Service.getArticles(queryMap)
@@ -41,8 +41,8 @@ class Repository(private val home24Service: Home24Service) {
                     .doOnTerminate { status.loading(false) }
                     .subscribe(
                             { result ->
-                                list = result._embedded.articles
-                                status.success(list!!)
+                                dataList.addAll(result._embedded.articles)
+                                status.success(dataList.subList(offset, offset + limit))
                             },
                             { error -> status.failed(error) }
                     )

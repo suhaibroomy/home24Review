@@ -23,6 +23,7 @@ class StackView @JvmOverloads constructor(
     private var translationDiff = 12
     private var maxAllowedCards = MAX_CARDS
     private val containers = ArrayList<View>()
+    private var addAfterAnimation: String? = null
     /**
      * Use this variable to check if the any view is in animating state
      */
@@ -72,11 +73,16 @@ class StackView @JvmOverloads constructor(
         update(0f)
     }
 
+
+
     /**
      * adds a new view to the back of the stack and loads up the image
      * @param uri Image Uri to be loaded
      */
     fun addCard(uri: String) {
+        if (animating) {
+            addAfterAnimation = uri
+        }
         val view = LayoutInflater.from(context).inflate(R.layout.card_stack, this, false)
         addCard(view, uri)
     }
@@ -149,6 +155,11 @@ class StackView @JvmOverloads constructor(
                     containers.removeAt(0)
                     nextCardUri?.let {
                         addCard(target, it)
+                    } ?: run {
+                        addAfterAnimation?.let {
+                            addAfterAnimation = null
+                            addCard(it)
+                        }
                     }
 
                 }
