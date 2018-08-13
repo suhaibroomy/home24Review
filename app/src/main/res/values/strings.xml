@@ -1,0 +1,13 @@
+<resources>
+    <string name="app_name">Home24ReviewApp</string>
+    <string name="start">Start</string>
+    <string name="welcome_msg">Hello and welcome to Home24 Favorites App</string>
+    <string name="instruction_msg">Tap the start button below to begin</string>
+    <string name="fab_transition">fab_transition</string>
+    <string name="review">Review</string>
+    <string name="review_selection">Review Selection</string>
+    <string name="error_fetch_msg">Could not fetch articles. Please try again</string>
+    <string name="retry">Retry</string>
+    <string name="end_msg">No more articles to review</string>
+    <string name="review_all_message">Please review all articles before navigating ahead</string>
+</resources>
